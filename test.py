@@ -17,6 +17,8 @@ import numpy as np
 
 test_dir = '/home/zeng/data/datasets/oxhand/test'  # training dataset
 output_dir = '/home/zeng/data/datasets/oxhand/test/seg1'  # save checkpoint parameters
+feature_param_file = '/home/zeng/handseg/parameters/feature-epoch-19-step-100.pth'
+deconv_param_file = '/home/zeng/handseg/parameters/deconv-epoch-19-step-100.pth'
 
 os.system('rm -rf ./runs/*')
 writer = SummaryWriter('./runs/'+datetime.now().strftime('%B%d  %H:%M:%S'))
@@ -30,11 +32,11 @@ if not os.path.exists(output_dir):
 # models
 feature = Feature()
 feature.cuda()
-feature.load_state_dict(torch.load('/home/zeng/handseg/parameters/feature-epoch-19-step-100.pth'))
+feature.load_state_dict(torch.load(feature_param_file))
 
 deconv = Deconv()
 deconv.cuda()
-deconv.load_state_dict(torch.load('/home/zeng/handseg/parameters/deconv-epoch-19-step-100.pth'))
+deconv.load_state_dict(torch.load(deconv_param_file))
 
 loader = torch.utils.data.DataLoader(
     MyTestData(test_dir, transform=True),
