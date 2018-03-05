@@ -16,9 +16,9 @@ from myfunc import make_image_grid
 import numpy as np
 
 test_dir = '/home/zeng/data/datasets/oxhand/test'  # training dataset
-output_dir = '/home/zeng/data/datasets/oxhand/test/seg1'  # save checkpoint parameters
-feature_param_file = '/home/zeng/handseg/parameters/feature-epoch-19-step-100.pth'
-deconv_param_file = '/home/zeng/handseg/parameters/deconv-epoch-19-step-100.pth'
+output_dir = '/home/zeng/data/datasets/oxhand/test/seg2'  # save checkpoint parameters
+feature_param_file = '/home/zeng/handseg/parameters_nobox/feature-epoch-99-step-18.pth'
+deconv_param_file = '/home/zeng/handseg/parameters_nobox/deconv-epoch-99-step-18.pth'
 
 os.system('rm -rf ./runs/*')
 writer = SummaryWriter('./runs/'+datetime.now().strftime('%B%d  %H:%M:%S'))
@@ -51,9 +51,11 @@ for ib, (data, img_name, img_size) in enumerate(loader):
     feats = feature(inputs)
 
     msk = deconv(feats)
-    msk = functional.softmax(msk)
+    _, msk = msk.max(1)
+    msk = msk.data[0].cpu().numpy()
+    # msk = functional.softmax(msk)
 
-    msk = msk.data[0, 1].cpu().numpy()
+    # msk = msk.data[0, 1].cpu().numpy()
     msk = (msk*255).astype(np.uint8)
 
     msk = Image.fromarray(msk)

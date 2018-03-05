@@ -10,10 +10,13 @@ from model import Feature, Deconv
 from tensorboard import SummaryWriter
 from datetime import datetime
 import os
+import glob
 import pdb
 from myfunc import make_image_grid
 
-train_dir = '/home/crow/data/datasets/oxhand/trainval_pix'  # training dataset
+# resume_ep = -1  # set to -1 if don't need to load checkpoint
+resume_ep = 10  # latest checkpoint
+train_dir = '/home/crow/data/datasets/oxhand/trainval'  # training dataset
 check_dir = './parameters'  # save checkpoint parameters
 
 bsize = 48  # batch size
@@ -38,6 +41,12 @@ feature.cuda()
 deconv = Deconv()
 deconv.cuda()
 
+if resume_ep >= 0:
+    feature_param_file = glob.glob('%s/feature-epoch-%d*.pth'%(check_dir, resume_ep))
+    deconv_param_file = glob.glob('%s/deconv-epoch-%d*.pth'%(check_dir, resume_ep))
+    feature.load_state_dict(torch.load(feature_param_file[0]))
+    deconv.load_state_dict(torch.load(deconv_param_file[0]))
+
 train_loader = torch.utils.data.DataLoader(
     MyData(train_dir, transform=True),
     batch_size=bsize, shuffle=True, num_workers=4, pin_memory=True)
@@ -49,7 +58,7 @@ optimizer_deconv = torch.optim.Adam(deconv.parameters(), lr=1e-3)
 optimizer_feature = torch.optim.Adam(feature.parameters(), lr=1e-4)
 
 
-for it in range(iter_num):
+for it in range(resume_ep+1, iter_num):
     for ib, (data, lbl) in enumerate(train_loader):
         inputs = Variable(data).cuda()
         lbl = Variable(lbl.long()).cuda()
