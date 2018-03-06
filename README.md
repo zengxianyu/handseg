@@ -9,3 +9,10 @@
 
 Train with image-level data: run ```train_cls.py```. I met an error "RuntimeError: DataLoader worker (pid 37825) is killed by signal: Terminated.". After wasting a lot of time trying to find a solution, I finally solved it by running on another computer.
 
+Option 1: training with image-level data and pixel-level (box-level) data sequentially:
+* run ```train_cls.py``` to train the feature extractor and the classifier. 
+* set ```pretrained_feature_file``` to the path to trained feature extractor.
+* run ```train.py```
+
+Option 2: training with image-level data and pixel-level (box-level) data alternately:
+* run ```train_alt.py```
