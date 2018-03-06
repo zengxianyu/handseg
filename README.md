@@ -1,18 +1,19 @@
 # Handseg
 
 ## Usage
-* first, install [PyTorch](https://github.com/pytorch/pytorch) (and [tensorboard-pytorch](https://github.com/lanpa/tensorboard-pytorch) if you'd like to visualize training progress in the browser.
-* if your tesnsorboard-pytorch is recently installed, ```import tensorboard``` in ```train.py``` should be replaced with ```import tensorboardx```.
-* to train a new model, firstly modify the file ```train.py``` and then run it. Set ```resume_ep=-1```Set ```train_dir``` to the path to training data , and set ```check_dir``` to the path to save parameters. There should be a folder of .jpg training images, named 'images', and a folder of .png groudtruth maps, named 'masks' in ```train_dir```.
-* to test an existing model, firstly modify the file ```test.py``` and then run it. Set ```test_dir``` to the path to test data, set ```feature_param_file``` and ```deconv_param_file``` to the corresponding parameter files. There should be a folder of .jpg input images, named 'images', in ```test_dir```.
-* to resume training from checkpoint, specify ```resume_ep``` to the epoch to resume by setting. For example, set ```resume_ep``` to 5 if there are feature-epoch-4-step-xx.pth and deconv-epoch-4-step-xx.pth in ```check_dir```
+First, install [PyTorch](https://github.com/pytorch/pytorch) (and [tensorboard-pytorch](https://github.com/lanpa/tensorboard-pytorch) if you'd like to visualize training progress in the browser.
 
-Train with image-level data: run ```train_cls.py```. I met an error "RuntimeError: DataLoader worker (pid 37825) is killed by signal: Terminated.". After wasting a lot of time trying to find a solution, I finally solved it by running on another computer.
+To train a new model, run ```python train.py --train_dir 'path/to/training/data' --check_dir 'path/to/save/parameters'```. There should be a folder of .jpg training images, named 'images', and a folder of .png groudtruth maps, named 'masks' in ```path/to/training/data```.
+
+To resume training from a checkpoint, specify ```--resume_ep``` to the epoch to resume. For example, run ```python train.py --train_dir 'path/to/training/data' --check_dir 'path/to/save/parameters' --resume_ep 5``` if there are feature-epoch-4-step-xx.pth and deconv-epoch-4-step-xx.pth in ```'path/to/save/parameters'```.
+
+To test an existing model, run ```python test.py --test_dir 'path/to/test/images' --output_dir 'path/to/save/results' --feat 'path/to/feature/parameters' --deconv 'path/to/segmentation/parameters'```. There should be a folder of .jpg input images, named 'images', in ```test_dir```.
+
+Train with image-level data: run ```python train_cls.py --train_dir 'path/to/training/data' --check_dir 'path/to/save/parameters'```. I met an error "RuntimeError: DataLoader worker (pid 37825) is killed by signal: Terminated.". After wasting a lot of time trying to find a solution, I finally solved it by running on another computer.
 
 Option 1: training with image-level data and pixel-level (box-level) data sequentially:
 * run ```train_cls.py``` to train the feature extractor and the classifier. 
-* set ```pretrained_feature_file``` to the path to trained feature extractor.
-* run ```train.py```
+* run ```python train.py --train_dir 'path/to/training/data' --check_dir 'path/to/save/parameters' --pretrained_feature_file 'path/to/pretrained/feature/file'``` to train with the feature extractor trained in the previous step.
 
 Option 2: training with image-level data and pixel-level (box-level) data alternately:
 * run ```train_alt.py```
