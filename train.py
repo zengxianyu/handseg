@@ -19,6 +19,8 @@ resume_ep = -1  # set to -1 if don't need to load checkpoint
 train_dir = '/home/zeng/data/datasets/oxhand/trainval_pix'  # training dataset
 check_dir = './parameters'  # save checkpoint parameters
 
+pretrained_feature_file = None
+
 bsize = 8  # batch size
 iter_num = 20  # training iterations
 
@@ -37,6 +39,9 @@ if not os.path.exists(check_dir):
 # models
 feature = Feature()
 feature.cuda()
+
+if pretrained_feature_file:
+    feature.load_state_dict(torch.load(pretrained_feature_file))
 
 deconv = Deconv()
 deconv.cuda()
