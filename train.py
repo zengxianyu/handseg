@@ -14,12 +14,12 @@ import glob
 import pdb
 from myfunc import make_image_grid
 
-# resume_ep = -1  # set to -1 if don't need to load checkpoint
-resume_ep = 10  # latest checkpoint
-train_dir = '/home/crow/data/datasets/oxhand/trainval'  # training dataset
+resume_ep = -1  # set to -1 if don't need to load checkpoint
+# resume_ep = 10  # latest checkpoint
+train_dir = '/home/zeng/data/datasets/oxhand/trainval_pix'  # training dataset
 check_dir = './parameters'  # save checkpoint parameters
 
-bsize = 48  # batch size
+bsize = 8  # batch size
 iter_num = 20  # training iterations
 
 std = [.229, .224, .225]
@@ -48,7 +48,7 @@ if resume_ep >= 0:
     deconv.load_state_dict(torch.load(deconv_param_file[0]))
 
 train_loader = torch.utils.data.DataLoader(
-    MyData(train_dir, transform=True),
+    MyData(train_dir, transform=True, crop=True, hflip=True, vflip=True),
     batch_size=bsize, shuffle=True, num_workers=4, pin_memory=True)
 
 criterion = CrossEntropyLoss2d(weight=torch.FloatTensor([1.0, 7.0]))

@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torchvision
 from torch.nn import init
 import pdb
@@ -83,3 +84,26 @@ class Deconv(nn.Module):
 
     def forward(self, x):
         return self.main(x)
+
+
+class Classifier(nn.Module):
+    def __init__(self):
+        super(Classifier, self).__init__()
+        self.main = nn.Sequential(
+            # fc6
+            nn.Linear(16*16*512, 1024),
+            # fc7
+            nn.Linear(1024, 1024),
+            # fc8
+            nn.Linear(1024, 1)
+        )
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                m.weight.data.normal_(0, 0.01)
+                m.bias.data.fill_(0)
+
+    def forward(self, x):
+        x = F.max_pool2d(x, 2, 2, ceil_mode=True)
+        bsize = x.size(0)
+        x = self.main(x.view(bsize, -1))
+        return x.view(-1)

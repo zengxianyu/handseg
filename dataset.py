@@ -5,6 +5,8 @@ import PIL.Image
 import torch
 from torch.utils import data
 import pdb
+import random
+import cv2
 
 
 class MyData(data.Dataset):
@@ -19,11 +21,13 @@ class MyData(data.Dataset):
     mean = np.array([0.485, 0.456, 0.406])
     std = np.array([0.229, 0.224, 0.225])
 
-    def __init__(self, root, transform=True):
+    def __init__(self, root, transform=True, hflip=False, vflip=False, crop=False):
         super(MyData, self).__init__()
         self.root = root
-        self._transform = transform
-
+        self.is_transform = transform
+        self.is_hflip = hflip
+        self.is_vflip = vflip
+        self.is_crop = crop
         img_root = os.path.join(self.root, 'images')
         gt_root = os.path.join(self.root, 'masks')
         file_names = os.listdir(gt_root)
@@ -49,15 +53,31 @@ class MyData(data.Dataset):
         # load image
         img_file = self.img_names[index]
         img = PIL.Image.open(img_file)
-        img = img.resize((256, 256))
         img = np.array(img, dtype=np.uint8)
 
         gt_file = self.gt_names[index]
         gt = PIL.Image.open(gt_file)
-        gt = gt.resize((256, 256))
         gt = np.array(gt, dtype=np.int32)
         gt[gt != 0] = 1
-        if self._transform:
+        if self.is_crop:
+            H = int(0.9 * img.shape[0])
+            W = int(0.9 * img.shape[1])
+            H_offset = random.choice(range(img.shape[0] - H))
+            W_offset = random.choice(range(img.shape[1] - W))
+            H_slice = slice(H_offset, H_offset + H)
+            W_slice = slice(W_offset, W_offset + W)
+            img = img[H_slice, W_slice, :]
+            gt = gt[H_slice, W_slice]
+        if self.is_hflip and random.randint(0, 1):
+            img = img[:, ::-1, :]
+            gt = gt[:, ::-1]
+        if self.is_vflip and random.randint(0, 1):
+            img = img[::-1, :, :]
+            gt = gt[::-1, :]
+        img = cv2.resize(img, dsize=(256, 256), interpolation=cv2.INTER_NEAREST)
+        gt = cv2.resize(gt, dsize=(256, 256), interpolation=cv2.INTER_NEAREST)
+
+        if self.is_transform:
             img, gt = self.transform(img, gt)
             return img, gt
         else:
