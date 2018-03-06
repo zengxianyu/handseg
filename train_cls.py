@@ -15,14 +15,25 @@ import glob
 import pdb
 from myfunc import make_image_grid
 import torchvision.datasets as datasets
+import argparse
 
-resume_ep = -1  # set to -1 if don't need to load checkpoint
-# resume_ep = 10  # latest checkpoint
-train_dir = '/home/zeng/data/datasets/clshand'  # classification data
-check_dir = './parameters_cls'  # save checkpoint parameters
+parser = argparse.ArgumentParser()
+parser.add_argument('--train_dir', default='/home/zeng/data/datasets/clshand')  # training dataset
+parser.add_argument('--check_dir', default='./parameters_cls')  # save checkpoint parameters
+parser.add_argument('--pretrained_feature_file', default=None)
+parser.add_argument('--resum_ep', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
+parser.add_argument('--bsize', type=int, default=20)  # baatch size
+parser.add_argument('--iter_num', type=int, default=20)  # baatch size
+opt = parser.parse_args()
+print(opt)
 
-bsize = 16  # batch size
-iter_num = 20
+resume_ep = opt.resum_ep
+train_dir = opt.train_dir
+check_dir = opt.check_dir
+pretrained_feature_file = opt.pretrained_feature_file
+
+bsize = opt.bsize
+iter_num = opt.iter_num  # training iterations
 
 std = [.229, .224, .225]
 mean = [.485, .456, .406]
@@ -76,8 +87,8 @@ for it in range(resume_ep+1, iter_num):
         optimizer_feature.step()
         optimizer_classifier.step()
         if ib % 20 ==0:
-            image = make_image_grid(inputs.data[:4, :3], mean, std)
-            writer.add_image('Image', torchvision.utils.make_grid(image), ib)
+            # image = make_image_grid(inputs.data[:4, :3], mean, std)
+            # writer.add_image('Image', torchvision.utils.make_grid(image), ib)
             writer.add_scalar('M_global', loss.data[0], ib)
         print('loss: %.4f (epoch: %d, step: %d)' % (loss.data[0], it, ib))
         del inputs, lbl, loss, feats

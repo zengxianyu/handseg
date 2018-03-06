@@ -14,17 +14,20 @@ import os
 import pdb
 from myfunc import make_image_grid
 import numpy as np
+import argparse
 
-test_dir = '/home/zeng/data/datasets/oxhand/test'  # training dataset
-output_dir = '/home/zeng/data/datasets/oxhand/test/seg3'  # save checkpoint parameters
-feature_param_file = '/home/zeng/handseg/parameters_nopix/feature-epoch-19-step-100.pth'
-deconv_param_file = '/home/zeng/handseg/parameters_nopix/deconv-epoch-19-step-100.pth'
+parser = argparse.ArgumentParser()
+parser.add_argument('--test_dir', default='/home/zeng/data/datasets/oxhand/test')  # dataset
+parser.add_argument('--output_dir', default='/home/zeng/data/datasets/oxhand/test/seg_nobox')
+parser.add_argument('--feat', default='/home/zeng/handseg/parameters_nobox/feature-epoch-39-step-18.pth')
+parser.add_argument('--deconv', default='/home/zeng/handseg/parameters_nobox/deconv-epoch-39-step-18.pth')
+opt = parser.parse_args()
+print(opt)
 
-os.system('rm -rf ./runs/*')
-writer = SummaryWriter('./runs/'+datetime.now().strftime('%B%d  %H:%M:%S'))
-
-if not os.path.exists('./runs'):
-    os.mkdir('./runs')
+test_dir = opt.test_dir
+output_dir = opt.output_dir
+feature_param_file = opt.feat
+deconv_param_file = opt.deconv
 
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
