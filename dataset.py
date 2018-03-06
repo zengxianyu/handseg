@@ -60,6 +60,8 @@ class MyClsData(data.Dataset):
         img = np.array(img, dtype=np.uint8)
         if len(img.shape) < 3:
             img = np.stack((img, img, img), 2)
+        if img.shape[2] > 3:
+            img = img[:, :, :3]
         gt = self.labels[index]
         if self.is_crop:
             H = int(0.9 * img.shape[0])

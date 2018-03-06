@@ -21,8 +21,11 @@ resume_ep = -1  # set to -1 if don't need to load checkpoint
 train_dir = '/home/zeng/data/datasets/clshand'  # classification data
 check_dir = './parameters_cls'  # save checkpoint parameters
 
-bsize = 36  # batch size
+bsize = 16  # batch size
 iter_num = 20
+
+std = [.229, .224, .225]
+mean = [.485, .456, .406]
 
 os.system('rm -rf ./runs2/*')
 writer = SummaryWriter('./runs2/'+datetime.now().strftime('%B%d  %H:%M:%S'))
@@ -58,8 +61,7 @@ optimizer_feature = torch.optim.Adam(feature.parameters(), lr=1e-4)
 
 for it in range(resume_ep+1, iter_num):
     for ib, (data, lbl) in enumerate(train_loader):
-        pdb.set_trace()
-        inputs = Variable(data).cuda()
+        inputs = Variable(data.float()).cuda()
         lbl = Variable(lbl.float()).cuda()
         feats = feature(inputs)
 
@@ -74,6 +76,8 @@ for it in range(resume_ep+1, iter_num):
         optimizer_feature.step()
         optimizer_classifier.step()
         if ib % 20 ==0:
+            image = make_image_grid(inputs.data[:4, :3], mean, std)
+            writer.add_image('Image', torchvision.utils.make_grid(image), ib)
             writer.add_scalar('M_global', loss.data[0], ib)
         print('loss: %.4f (epoch: %d, step: %d)' % (loss.data[0], it, ib))
         del inputs, lbl, loss, feats
