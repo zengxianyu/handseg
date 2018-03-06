@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as functional
 from torch.autograd import Variable
 import torchvision
-from dataset import MyData
+from dataset import MyData, MyClsData
 from criterion import CrossEntropyLoss2d
 from model import Feature, Classifier
 import torchvision.transforms as transforms
@@ -18,11 +18,11 @@ import torchvision.datasets as datasets
 
 resume_ep = -1  # set to -1 if don't need to load checkpoint
 # resume_ep = 10  # latest checkpoint
-train_dir = '/home/crow/data/datasets/clshand'
+train_dir = '/home/zeng/data/datasets/clshand'  # classification data
 check_dir = './parameters_cls'  # save checkpoint parameters
 
-bsize = 40  # batch size
-iter_num = 20  # training iterations
+bsize = 36  # batch size
+iter_num = 20
 
 os.system('rm -rf ./runs2/*')
 writer = SummaryWriter('./runs2/'+datetime.now().strftime('%B%d  %H:%M:%S'))
@@ -46,19 +46,9 @@ if resume_ep >= 0:
     feature.load_state_dict(torch.load(feature_param_file[0]))
     classifier.load_state_dict(torch.load(classifier_param_file[0]))
 
-
-dataset = datasets.ImageFolder(
-    train_dir,
-    transforms.Compose([
-        transforms.Resize((256,256)),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ]))
-
 train_loader = torch.utils.data.DataLoader(
-    dataset,
-    batch_size=bsize, shuffle=True, num_workers=0, pin_memory=True)
+    MyClsData(train_dir, transform=True, crop=True, hflip=True, vflip=True),
+    batch_size=bsize, shuffle=True, num_workers=4, pin_memory=True)
 
 criterion = nn.BCEWithLogitsLoss()
 criterion.cuda()
@@ -68,6 +58,7 @@ optimizer_feature = torch.optim.Adam(feature.parameters(), lr=1e-4)
 
 for it in range(resume_ep+1, iter_num):
     for ib, (data, lbl) in enumerate(train_loader):
+        pdb.set_trace()
         inputs = Variable(data).cuda()
         lbl = Variable(lbl.float()).cuda()
         feats = feature(inputs)
