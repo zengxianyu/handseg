@@ -15,16 +15,26 @@ from myfunc import make_image_grid
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--train_dir', default='/home/crow/data/datasets/oxhand/trainval_pix')  # training dataset
+parser.add_argument('--q', default='')  # training dataset
+parser.add_argument('--train_dir', default='/home/crow/data/datasets/oxhand/big')  # training dataset
 parser.add_argument('--check_dir', default='./parameters')  # save checkpoint parameters
 parser.add_argument('--pretrained_feature_file', default=None)
-parser.add_argument('--resum_ep', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
-parser.add_argument('--bsize', type=int, default=48)  # baatch size
+parser.add_argument('--resume_ep', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
+parser.add_argument('--bsize', type=int, default=30)  # baatch size
 parser.add_argument('--iter_num', type=int, default=20)  # baatch size
 opt = parser.parse_args()
 print(opt)
 
-resume_ep = opt.resum_ep
+label_weight = [1.01, 84.43]
+
+label_weights = {'nopix':[1.01, 89.88], 'nobox':[1.01, 80.69]}
+
+if opt.q:
+    opt.train_dir = '%s_%s'%(opt.train_dir, opt.q)
+    opt.check_dir = '%s_%s'%(opt.check_dir, opt.q)
+    label_weight = label_weights[opt.q]
+
+resume_ep = opt.resume_ep
 train_dir = opt.train_dir
 check_dir = opt.check_dir
 pretrained_feature_file = opt.pretrained_feature_file
@@ -61,7 +71,7 @@ if resume_ep >= 0:
     deconv.load_state_dict(torch.load(deconv_param_file[0]))
 
 train_loader = torch.utils.data.DataLoader(
-    MyData(train_dir, transform=True, crop=True, hflip=True, vflip=True),
+    MyData(train_dir, transform=True, crop=True, hflip=True, vflip=False),
     batch_size=bsize, shuffle=True, num_workers=4, pin_memory=True)
 
 criterion = CrossEntropyLoss2d(weight=torch.FloatTensor([1.0, 7.0]))

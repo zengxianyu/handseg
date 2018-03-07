@@ -35,6 +35,7 @@ pretrained_feature_file = opt.pretrained_feature_file
 bsize = opt.bsize
 iter_num = opt.iter_num  # training iterations
 
+label_weight = [5.27, 4.15]
 std = [.229, .224, .225]
 mean = [.485, .456, .406]
 
@@ -64,7 +65,7 @@ train_loader = torch.utils.data.DataLoader(
     MyClsData(train_dir, transform=True, crop=True, hflip=True, vflip=True),
     batch_size=bsize, shuffle=True, num_workers=4, pin_memory=True)
 
-criterion = nn.BCEWithLogitsLoss()
+criterion = nn.CrossEntropyLoss()
 criterion.cuda()
 
 optimizer_classifier = torch.optim.Adam(classifier.parameters(), lr=1e-3)
@@ -73,7 +74,7 @@ optimizer_feature = torch.optim.Adam(feature.parameters(), lr=1e-4)
 for it in range(resume_ep+1, iter_num):
     for ib, (data, lbl) in enumerate(train_loader):
         inputs = Variable(data.float()).cuda()
-        lbl = Variable(lbl.float()).cuda()
+        lbl = Variable(lbl.long()).cuda()
         feats = feature(inputs)
 
         output = classifier(feats)

@@ -95,7 +95,7 @@ class Classifier(nn.Module):
             # fc7
             nn.Linear(1024, 1024),
             # fc8
-            nn.Linear(1024, 1)
+            nn.Linear(1024, 2)
         )
         for m in self.modules():
             if isinstance(m, nn.Linear):
@@ -106,4 +106,4 @@ class Classifier(nn.Module):
         x = F.max_pool2d(x, 2, 2, ceil_mode=True)
         bsize = x.size(0)
         x = self.main(x.view(bsize, -1))
-        return x.view(-1)
+        return x
