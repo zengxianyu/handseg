@@ -15,7 +15,7 @@ To resume training from a checkpoint, specify ```--r``` to the epoch to resume. 
 ```
 python train.py --train_dir 'path/to/training/data' --check_dir 'path/to/save/parameters' --r 5
 ``` 
-if there are feature-epoch-4-step-xx.pth and deconv-epoch-4-step-xx.pth in ```'path/to/save/parameters'```.
+if there are feature-epoch-5-step-xx.pth and deconv-epoch-5-step-xx.pth in ```'path/to/save/parameters'```.
 
 To test an existing model, run 
 ```
