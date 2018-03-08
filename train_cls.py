@@ -20,20 +20,18 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--train_dir', default='/home/zeng/data/datasets/clshand')  # training dataset
 parser.add_argument('--check_dir', default='./parameters_cls')  # save checkpoint parameters
-parser.add_argument('--pretrained_feature_file', default=None)
-parser.add_argument('--resum_ep', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
-parser.add_argument('--bsize', type=int, default=20)  # baatch size
-parser.add_argument('--iter_num', type=int, default=20)  # baatch size
+parser.add_argument('--r', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
+parser.add_argument('--b', type=int, default=20)  # baatch size
+parser.add_argument('--e', type=int, default=20)  # training epoches
 opt = parser.parse_args()
 print(opt)
 
-resume_ep = opt.resum_ep
+resume_ep = opt.r
 train_dir = opt.train_dir
 check_dir = opt.check_dir
-pretrained_feature_file = opt.pretrained_feature_file
 
-bsize = opt.bsize
-iter_num = opt.iter_num  # training iterations
+bsize = opt.b
+iter_num = opt.e
 
 label_weight = [5.27, 4.15]
 std = [.229, .224, .225]
