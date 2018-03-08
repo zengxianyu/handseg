@@ -7,11 +7,13 @@ To train a new model, run
 ```
 python train.py --train_dir 'path/to/training/data' --check_dir 'path/to/save/parameters'
 ```
-there should be a folder of .jpg training images, named 'images', and a folder of .png groudtruth maps, named 'masks' in ```path/to/training/data```.
+there should be a folder of .jpg training images, named 'images', a folder of .png pixel-level groundtruth maps, named 'pix', and a folder of .png box groudtruth maps, named 'box' in ```path/to/training/data```.
+By default, both box and pixel-level annotations will be used for training. Use ```--q box``` or ```--q pix``` to specify training data to be box annotations or pixel-level annotations.
 
-To resume training from a checkpoint, specify ```--resume_ep``` to the epoch to resume. For example, run 
+
+To resume training from a checkpoint, specify ```--r``` to the epoch to resume. For example, run 
 ```
-python train.py --train_dir 'path/to/training/data' --check_dir 'path/to/save/parameters' --resume_ep 5
+python train.py --train_dir 'path/to/training/data' --check_dir 'path/to/save/parameters' --r 5
 ``` 
 if there are feature-epoch-4-step-xx.pth and deconv-epoch-4-step-xx.pth in ```'path/to/save/parameters'```.
 
@@ -30,7 +32,7 @@ Option 1: training with image-level data and pixel-level (box-level) data sequen
 * run ```train_cls.py``` to train the feature extractor and the classifier. 
 * run 
 ```
-python train.py --train_dir 'path/to/training/data' --check_dir 'path/to/save/parameters' --pretrained_feature_file 'path/to/pretrained/feature/file'
+python train.py --train_dir 'path/to/training/data' --check_dir 'path/to/save/parameters' --f 'path/to/pretrained/feature/file'
 ``` 
 to train with the feature extractor trained in the previous step.
 

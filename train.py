@@ -3,10 +3,10 @@ import torch
 import torch.nn.functional as functional
 from torch.autograd import Variable
 import torchvision
-from dataset import MyData
+from dataset import MyBoxPixData
 from criterion import CrossEntropyLoss2d
 from model import Feature, Deconv
-from tensorboard import SummaryWriter
+from tensorboardX import SummaryWriter
 from datetime import datetime
 import os
 import glob
@@ -15,32 +15,31 @@ from myfunc import make_image_grid
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--q', default='')  # training dataset
+parser.add_argument('--q', default='')  # '' or 'pix' or 'box'
 parser.add_argument('--train_dir', default='/home/crow/data/datasets/oxhand/big')  # training dataset
 parser.add_argument('--check_dir', default='./parameters')  # save checkpoint parameters
-parser.add_argument('--pretrained_feature_file', default=None)
-parser.add_argument('--resume_ep', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
-parser.add_argument('--bsize', type=int, default=30)  # baatch size
-parser.add_argument('--iter_num', type=int, default=20)  # baatch size
+parser.add_argument('--f', default=None)
+parser.add_argument('--r', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
+parser.add_argument('--b', type=int, default=30)  # batch size
+parser.add_argument('--e', type=int, default=20)  # epoches
 opt = parser.parse_args()
 print(opt)
 
 label_weight = [1.01, 84.43]
 
-label_weights = {'nopix':[1.01, 89.88], 'nobox':[1.01, 80.69]}
+label_weights = {'box':[1.01, 89.88], 'pix':[1.01, 80.69]}
 
 if opt.q:
-    opt.train_dir = '%s_%s'%(opt.train_dir, opt.q)
     opt.check_dir = '%s_%s'%(opt.check_dir, opt.q)
     label_weight = label_weights[opt.q]
 
-resume_ep = opt.resume_ep
+resume_ep = opt.r
 train_dir = opt.train_dir
 check_dir = opt.check_dir
-pretrained_feature_file = opt.pretrained_feature_file
+pretrained_feature_file = opt.f
 
-bsize = opt.bsize
-iter_num = opt.iter_num  # training iterations
+bsize = opt.b
+iter_num = opt.e  # training iterations
 
 std = [.229, .224, .225]
 mean = [.485, .456, .406]
@@ -71,7 +70,7 @@ if resume_ep >= 0:
     deconv.load_state_dict(torch.load(deconv_param_file[0]))
 
 train_loader = torch.utils.data.DataLoader(
-    MyData(train_dir, transform=True, crop=True, hflip=True, vflip=False),
+    MyBoxPixData(train_dir, transform=True, crop=True, hflip=True, vflip=False, source=opt.q),
     batch_size=bsize, shuffle=True, num_workers=4, pin_memory=True)
 
 criterion = CrossEntropyLoss2d(weight=torch.FloatTensor([1.0, 7.0]))
@@ -85,7 +84,6 @@ for it in range(resume_ep+1, iter_num):
     for ib, (data, lbl) in enumerate(train_loader):
         inputs = Variable(data).cuda()
         lbl = Variable(lbl.long()).cuda()
-
         feats = feature(inputs)
 
         msk = deconv(feats)
@@ -100,7 +98,7 @@ for it in range(resume_ep+1, iter_num):
 
         optimizer_feature.step()
         optimizer_deconv.step()
-        # if ib % 20 ==0:
+        # if ib % 1 ==0:
         #     # visulize
         #     image = make_image_grid(inputs.data[:4, :3], mean, std)
         #     writer.add_image('Image', torchvision.utils.make_grid(image), ib)
@@ -108,6 +106,9 @@ for it in range(resume_ep+1, iter_num):
         #     mask1 = msk.data[:4, 1:2]
         #     mask1 = mask1.repeat(1, 3, 1, 1)
         #     writer.add_image('Image2', torchvision.utils.make_grid(mask1), ib)
+        #     mask1 = lbl.data[:4].unsqueeze(1).float()
+        #     mask1 = mask1.repeat(1, 3, 1, 1)
+        #     writer.add_image('Label', torchvision.utils.make_grid(mask1), ib)
         #     writer.add_scalar('M_global', loss.data[0], ib)
         print('loss: %.4f (epoch: %d, step: %d)' % (loss.data[0], it, ib))
         del inputs, msk, lbl, loss, feats

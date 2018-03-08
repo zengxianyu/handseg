@@ -62,7 +62,7 @@ if resume_ep >= 0:
     classifier.load_state_dict(torch.load(classifier_param_file[0]))
 
 train_loader = torch.utils.data.DataLoader(
-    MyClsData(train_dir, transform=True, crop=True, hflip=True, vflip=True),
+    MyClsData(train_dir, transform=True, crop=True, hflip=True, vflip=False),
     batch_size=bsize, shuffle=True, num_workers=4, pin_memory=True)
 
 criterion = nn.CrossEntropyLoss()
