@@ -27,7 +27,7 @@ parser.add_argument('--cls_train_dir', default='/home/crow/data/datasets/oxhand/
 parser.add_argument('--seg_train_dir', default='/home/crow/data/datasets/oxhand/train')  # segmentation data
 parser.add_argument('--check_dir', default='./parameters_alt')  # save checkpoint parameters
 parser.add_argument('--r', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
-parser.add_argument('--b', type=int, default=32)  # batch size
+parser.add_argument('--b', type=int, default=16)  # batch size
 parser.add_argument('--e', type=int, default=20)  # training epoches
 opt = parser.parse_args()
 print(opt)
@@ -120,6 +120,7 @@ for it in range(resume_ep+1, iter_num):
             ibs = 0
         inputs = Variable(data.float()).cuda()
         lbl = Variable(lbl.long()).cuda()
+        feats = feature(inputs)
         msk = deconv(feats)
         msk = functional.upsample(msk, scale_factor=8)
 
