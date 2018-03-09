@@ -115,6 +115,7 @@ for it in range(resume_ep+1, iter_num):
 
         # train with segmentation data
         data, lbl = segIter.next()
+        ibs += 1
         if ibs >= len(segIter):
             segIter = iter(seg_loader)
             ibs = 0
