@@ -5,7 +5,10 @@ from torch.autograd import Variable
 import torchvision
 from dataset import MyClsBoxPixData
 from criterion import CrossEntropyLoss2d
-from model import Feature, Deconv
+from model import Deconv
+from vgg import Vgg16
+from resnet import resnet50
+from densenet import densenet121
 from tensorboardX import SummaryWriter
 from datetime import datetime
 import os
@@ -15,23 +18,24 @@ from myfunc import make_image_grid, crf_func
 import argparse
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--i', default='vgg')  # 'vgg' or 'resnet' or 'densenet'
 parser.add_argument('--q', default='')  # '' or 'pix' or 'box'
-parser.add_argument('--train_dir', default='/home/crow/data/datasets/oxhand/train')  # training dataset
+parser.add_argument('--train_dir', default='/home/zeng/data/datasets/oxhand/train')  # training dataset
 parser.add_argument('--check_dir', default='./parameters_with_cls')  # save checkpoint parameters
 parser.add_argument('--f', default=None)
 parser.add_argument('--r', type=int, default=19)  # latest checkpoint, set to -1 if don't need to load checkpoint
-parser.add_argument('--b', type=int, default=36)  # batch size
+parser.add_argument('--b', type=int, default=8)  # batch size
 parser.add_argument('--e', type=int, default=40)  # epoches
 opt = parser.parse_args()
 print(opt)
 
-label_weight = [1.01, 84.43]
+label_weight = [1, 25]
 
-label_weights = {'box':[1.01, 89.88], 'pix':[1.01, 80.69]}
-
-if opt.q:
-    opt.check_dir = '%s_%s'%(opt.check_dir, opt.q)
-    label_weight = label_weights[opt.q]
+# label_weights = {'box':[1.01, 89.88], 'pix':[1.01, 80.69]}
+#
+# if opt.q:
+#     opt.check_dir = '%s_%s'%(opt.check_dir, opt.q)
+#     label_weight = label_weights[opt.q]
 
 resume_ep = opt.r
 train_dir = opt.train_dir
@@ -54,14 +58,20 @@ if not os.path.exists(check_dir):
     os.mkdir(check_dir)
 
 # models
-feature = Feature()
+if 'vgg' == opt.i:
+    feature = Vgg16(pretrained=True)
+elif 'resnet' == opt.i:
+    feature = resnet50(pretrained=True)
+elif 'densenet' == opt.i:
+    feature = densenet121(pretrained=True)
 feature.cuda()
+
+deconv = Deconv(opt.i)
+deconv.cuda()
 
 if pretrained_feature_file:
     feature.load_state_dict(torch.load(pretrained_feature_file))
 
-deconv = Deconv()
-deconv.cuda()
 
 if resume_ep >= 0:
     feature_param_file = glob.glob('%s/feature-epoch-%d*.pth'%(check_dir, resume_ep))

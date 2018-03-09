@@ -6,68 +6,21 @@ from torch.nn import init
 import pdb
 
 
-class Feature(nn.Module):
-    def __init__(self):
-        super(Feature, self).__init__()
-        self.main = nn.Sequential(
-            # conv1
-            nn.Conv2d(3, 64, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(64, 64, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2, stride=2, ceil_mode=True),  # 1/2
-            # conv2
-            nn.Conv2d(64, 128, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(128, 128, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2, stride=2, ceil_mode=True),  # 1/4
-            # conv3
-            nn.Conv2d(128, 256, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(256, 256, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(256, 256, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2, stride=2, ceil_mode=True),  # 1/8
-            # conv4
-            nn.Conv2d(256, 512, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(512, 512, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(512, 512, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(1, stride=1, ceil_mode=True),  # 1/16
-            # conv5 features
-            nn.Conv2d(512, 512, 3, padding=2, dilation=2),
-            nn.ReLU(),
-            nn.Conv2d(512, 512, 3, padding=2, dilation=2),
-            nn.ReLU(),
-            nn.Conv2d(512, 512, 3, padding=2, dilation=2),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3, stride=1, padding=1, ceil_mode=True),  # 1/16
-        )
-        vgg16 = torchvision.models.vgg16(pretrained=True)
-        L_vgg16 = list(vgg16.features)
-        L_self = list(self.main)
-        for l1, l2 in zip(L_vgg16, L_self):
-            if (isinstance(l1, nn.Conv2d) and
-                    isinstance(l2, nn.Conv2d)):
-                assert l1.weight.size() == l2.weight.size()
-                assert l1.bias.size() == l2.bias.size()
-                l2.weight.data = l1.weight.data
-                l2.bias.data = l1.bias.data
-
-    def forward(self, x):
-        return self.main(x)
+def nothing(x):
+    return x
 
 
 class Deconv(nn.Module):
-    def __init__(self):
+    def __init__(self, iii):
         super(Deconv, self).__init__()
+        if 'resnet' == iii:
+            self.reduce_channel = nn.Conv2d(2048, 512, kernel_size=1)
+        elif 'densenet' == iii:
+            self.reduce_channel = nn.Conv2d(1024, 512, kernel_size=1)
+        else:
+            self.reduce_channel = nothing
         self.main = nn.Sequential(
             # fc6
-            nn.AvgPool2d(kernel_size=3, stride=1, padding=1, ceil_mode=True),
             nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=12, dilation=12),
             nn.ReLU(),
             nn.Dropout(),
@@ -83,12 +36,20 @@ class Deconv(nn.Module):
                 m.weight.data.normal_(0, 0.01)
 
     def forward(self, x):
+        x = F.avg_pool2d(x, kernel_size=3, stride=1, padding=1, ceil_mode=True)
+        x = self.reduce_channel(x)
         return self.main(x)
 
 
 class Classifier(nn.Module):
-    def __init__(self):
+    def __init__(self, iii):
         super(Classifier, self).__init__()
+        if 'resnet' == iii:
+            self.reduce_channel = nn.Conv2d(2048, 512, kernel_size=1)
+        elif 'densenet' == iii:
+            self.reduce_channel = nn.Conv2d(1024, 512, kernel_size=1)
+        else:
+            self.reduce_channel = nothing
         self.main = nn.Sequential(
             # fc6
             nn.Linear(16*16*512, 1024),
@@ -104,6 +65,7 @@ class Classifier(nn.Module):
 
     def forward(self, x):
         x = F.max_pool2d(x, 2, 2, ceil_mode=True)
+        x = self.reduce_channel(x)
         bsize = x.size(0)
         x = self.main(x.view(bsize, -1))
         return x

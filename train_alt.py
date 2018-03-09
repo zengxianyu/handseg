@@ -6,7 +6,10 @@ from torch.autograd import Variable
 import torchvision
 from dataset import MyBoxPixData, MyClsData
 from criterion import CrossEntropyLoss2d
-from model import Feature, Classifier, Deconv
+from model import Classifier, Deconv
+from vgg import Vgg16
+from resnet import resnet50
+from densenet import densenet121
 import torchvision.transforms as transforms
 from tensorboardX import SummaryWriter
 from datetime import datetime
@@ -18,6 +21,7 @@ import torchvision.datasets as datasets
 import argparse
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--i', default='vgg')  # 'vgg' or 'resnet' or 'densenet'
 parser.add_argument('--q', default='')  # '' or 'pix' or 'box'
 parser.add_argument('--cls_train_dir', default='/home/zeng/data/datasets/clshand')  # classification data
 parser.add_argument('--seg_train_dir', default='/home/zeng/data/datasets/oxhand/train')  # segmentation data
@@ -37,13 +41,13 @@ bsize = opt.b
 iter_num = opt.e
 
 cls_label_weight = [5.11, 3.98]
-seg_label_weight = [1.01, 84.43]
+seg_label_weight = [1, 25]
 
-seg_label_weights = {'box':[1.01, 89.88], 'pix':[1.01, 80.69]}
-
-if opt.q:
-    opt.check_dir = '%s_%s'%(opt.check_dir, opt.q)
-    seg_label_weight = seg_label_weights[opt.q]
+# seg_label_weights = {'box':[1.01, 89.88], 'pix':[1.01, 80.69]}
+#
+# if opt.q:
+#     opt.check_dir = '%s_%s'%(opt.check_dir, opt.q)
+#     seg_label_weight = seg_label_weights[opt.q]
 
 std = [.229, .224, .225]
 mean = [.485, .456, .406]
@@ -58,13 +62,18 @@ if not os.path.exists(check_dir):
     os.mkdir(check_dir)
 
 # models
-feature = Feature()
+if 'vgg' == opt.i:
+    feature = Vgg16(pretrained=True)
+elif 'resnet' == opt.i:
+    feature = resnet50(pretrained=True)
+elif 'densenet' == opt.i:
+    feature = densenet121(pretrained=True)
 feature.cuda()
 
-classifier = Classifier()
+classifier = Classifier(opt.i)
 classifier.cuda()
 
-deconv = Deconv()
+deconv = Deconv(opt.i)
 deconv.cuda()
 
 if resume_ep >= 0:

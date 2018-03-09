@@ -6,7 +6,10 @@ from torch.autograd import Variable
 import torchvision
 from dataset import MyData, MyClsData
 from criterion import CrossEntropyLoss2d
-from model import Feature, Classifier
+from vgg import Vgg16
+from resnet import resnet50
+from densenet import densenet121
+from model import Classifier
 import torchvision.transforms as transforms
 from tensorboardX import SummaryWriter
 from datetime import datetime
@@ -18,10 +21,11 @@ import torchvision.datasets as datasets
 import argparse
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--i', default='vgg')  # 'vgg' or 'resnet' or 'densenet'
 parser.add_argument('--train_dir', default='/home/zeng/data/datasets/clshand')  # training dataset
 parser.add_argument('--check_dir', default='./parameters_cls')  # save checkpoint parameters
 parser.add_argument('--r', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
-parser.add_argument('--b', type=int, default=20)  # batch size
+parser.add_argument('--b', type=int, default=8)  # batch size
 parser.add_argument('--e', type=int, default=20)  # training epoches
 opt = parser.parse_args()
 print(opt)
@@ -47,10 +51,15 @@ if not os.path.exists(check_dir):
     os.mkdir(check_dir)
 
 # models
-feature = Feature()
+if 'vgg' == opt.i:
+    feature = Vgg16(pretrained=True)
+elif 'resnet' == opt.i:
+    feature = resnet50(pretrained=True)
+elif 'densenet' == opt.i:
+    feature = densenet121(pretrained=True)
 feature.cuda()
 
-classifier = Classifier()
+classifier = Classifier(opt.i)
 classifier.cuda()
 
 if resume_ep >= 0:
