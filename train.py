@@ -73,7 +73,7 @@ train_loader = torch.utils.data.DataLoader(
     MyBoxPixData(train_dir, transform=True, crop=True, hflip=True, vflip=False, source=opt.q),
     batch_size=bsize, shuffle=True, num_workers=4, pin_memory=True)
 
-criterion = CrossEntropyLoss2d(weight=torch.FloatTensor([1.0, 7.0]))
+criterion = CrossEntropyLoss2d(weight=torch.FloatTensor(label_weight))
 criterion.cuda()
 
 optimizer_deconv = torch.optim.Adam(deconv.parameters(), lr=1e-3)

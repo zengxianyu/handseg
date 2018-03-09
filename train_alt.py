@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as functional
 from torch.autograd import Variable
 import torchvision
-from dataset import MyData, MyClsData
+from dataset import MyBoxPixData, MyClsData
 from criterion import CrossEntropyLoss2d
 from model import Feature, Classifier, Deconv
 import torchvision.transforms as transforms
@@ -15,15 +15,35 @@ import glob
 import pdb
 from myfunc import make_image_grid
 import torchvision.datasets as datasets
+import argparse
 
-resume_ep = -1  # set to -1 if don't need to load checkpoint
-# resume_ep = 10  # latest checkpoint
-cls_train_dir = '/home/zeng/data/datasets/clshand'  # classification data
-seg_train_dir = '/home/zeng/data/datasets/oxhand/trainval_pix'  # segmentation data
-check_dir = './parameters_alt'  # save checkpoint parameters
+parser = argparse.ArgumentParser()
+parser.add_argument('--q', default='')  # '' or 'pix' or 'box'
+parser.add_argument('--cls_train_dir', default='/home/zeng/data/datasets/clshand')  # classification data
+parser.add_argument('--seg_train_dir', default='/home/zeng/data/datasets/oxhand/train')  # segmentation data
+parser.add_argument('--check_dir', default='./parameters_alt')  # save checkpoint parameters
+parser.add_argument('--r', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
+parser.add_argument('--b', type=int, default=8)  # batch size
+parser.add_argument('--e', type=int, default=20)  # training epoches
+opt = parser.parse_args()
+print(opt)
 
-bsize = 16  # batch size
-iter_num = 20
+resume_ep = opt.r
+cls_train_dir = opt.cls_train_dir
+seg_train_dir = opt.seg_train_dir
+check_dir = opt.check_dir
+
+bsize = opt.b
+iter_num = opt.e
+
+cls_label_weight = [5.11, 3.98]
+seg_label_weight = [1.01, 84.43]
+
+seg_label_weights = {'box':[1.01, 89.88], 'pix':[1.01, 80.69]}
+
+if opt.q:
+    opt.check_dir = '%s_%s'%(opt.check_dir, opt.q)
+    seg_label_weight = seg_label_weights[opt.q]
 
 std = [.229, .224, .225]
 mean = [.485, .456, .406]
@@ -60,13 +80,13 @@ cls_loader = torch.utils.data.DataLoader(
     batch_size=bsize, shuffle=True, num_workers=4, pin_memory=True)
 
 seg_loader = torch.utils.data.DataLoader(
-    MyData(seg_train_dir, transform=True, crop=True, hflip=True, vflip=True),
+    MyBoxPixData(seg_train_dir, transform=True, crop=True, hflip=True, vflip=False, source=opt.q),
     batch_size=bsize, shuffle=True, num_workers=4, pin_memory=True)
 
-criterion_cls = nn.BCEWithLogitsLoss()
+criterion_cls = nn.CrossEntropyLoss(weight=torch.FloatTensor(cls_label_weight))
 criterion_cls.cuda()
 
-criterion_seg = CrossEntropyLoss2d(weight=torch.FloatTensor([1.0, 7.0]))
+criterion_seg = CrossEntropyLoss2d(weight=torch.FloatTensor(seg_label_weight))
 criterion_seg.cuda()
 
 optimizer_classifier = torch.optim.Adam(classifier.parameters(), lr=1e-3)
@@ -79,7 +99,7 @@ for it in range(resume_ep+1, iter_num):
     for ib, (data, lbl) in enumerate(cls_loader):
         # train with classification data
         inputs = Variable(data.float()).cuda()
-        lbl = Variable(lbl.float()).cuda()
+        lbl = Variable(lbl.long()).cuda()
         feats = feature(inputs)
         output = classifier(feats)
         loss_cls = criterion_cls(output, lbl)

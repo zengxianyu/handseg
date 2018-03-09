@@ -17,10 +17,10 @@ import numpy as np
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--test_dir', default='/home/zeng/data/datasets/oxhand/val')  # dataset
-parser.add_argument('--output_dir', default='/home/zeng/data/datasets/oxhand/val/seg_cls_seq')
-parser.add_argument('--feat', default='/home/zeng/handseg/parameters_cls_seq/feature-epoch-19-step-190.pth')
-parser.add_argument('--deconv', default='/home/zeng/handseg/parameters_cls_seq/deconv-epoch-19-step-190.pth')
+parser.add_argument('--test_dir', default='/home/zeng/data/datasets/oxhand/test')  # dataset
+parser.add_argument('--output_dir', default='/home/zeng/data/datasets/oxhand/test/seg_cls')
+parser.add_argument('--feat', default='/home/zeng/handseg/parameters_with_cls/feature-epoch-39-step-411.pth')
+parser.add_argument('--deconv', default='/home/zeng/handseg/parameters_with_cls/deconv-epoch-39-step-411.pth')
 opt = parser.parse_args()
 print(opt)
 

@@ -63,7 +63,7 @@ train_loader = torch.utils.data.DataLoader(
     MyClsData(train_dir, transform=True, crop=True, hflip=True, vflip=False),
     batch_size=bsize, shuffle=True, num_workers=4, pin_memory=True)
 
-criterion = nn.CrossEntropyLoss()
+criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor(label_weight))
 criterion.cuda()
 
 optimizer_classifier = torch.optim.Adam(classifier.parameters(), lr=1e-3)
