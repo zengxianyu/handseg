@@ -23,11 +23,11 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--i', default='vgg')  # 'vgg' or 'resnet' or 'densenet'
 parser.add_argument('--q', default='')  # '' or 'pix' or 'box'
-parser.add_argument('--cls_train_dir', default='/home/zeng/data/datasets/clshand')  # classification data
-parser.add_argument('--seg_train_dir', default='/home/zeng/data/datasets/oxhand/train')  # segmentation data
+parser.add_argument('--cls_train_dir', default='/home/crow/data/datasets/oxhand/train')  # classification data
+parser.add_argument('--seg_train_dir', default='/home/crow/data/datasets/oxhand/train')  # segmentation data
 parser.add_argument('--check_dir', default='./parameters_alt')  # save checkpoint parameters
 parser.add_argument('--r', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
-parser.add_argument('--b', type=int, default=8)  # batch size
+parser.add_argument('--b', type=int, default=32)  # batch size
 parser.add_argument('--e', type=int, default=20)  # training epoches
 opt = parser.parse_args()
 print(opt)
@@ -40,7 +40,7 @@ check_dir = opt.check_dir
 bsize = opt.b
 iter_num = opt.e
 
-cls_label_weight = [5.11, 3.98]
+cls_label_weight = [9.81, 3.98]
 seg_label_weight = [1, 25]
 
 # seg_label_weights = {'box':[1.01, 89.88], 'pix':[1.01, 80.69]}
@@ -85,7 +85,7 @@ if resume_ep >= 0:
     deconv.load_state_dict(torch.load(deconv_param_file[0]))
 
 cls_loader = torch.utils.data.DataLoader(
-    MyClsData(cls_train_dir, transform=True, crop=True, hflip=True, vflip=True),
+    MyClsData(cls_train_dir, transform=True, crop=True, hflip=True, vflip=False),
     batch_size=bsize, shuffle=True, num_workers=4, pin_memory=True)
 
 seg_loader = torch.utils.data.DataLoader(

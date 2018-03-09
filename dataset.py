@@ -30,8 +30,10 @@ class MyClsData(data.Dataset):
         self.is_crop = crop
         neg_root = os.path.join(self.root, '0')
         pos_root = os.path.join(self.root, '1')
+        pos_root2 = os.path.join(self.root, 'images')
         neg_names = os.listdir(neg_root)
         pos_names = os.listdir(pos_root)
+        pos_names2 = os.listdir(pos_root2)
 
         neg_img_names = []
         pos_img_names = []
@@ -46,6 +48,12 @@ class MyClsData(data.Dataset):
                 continue
             pos_img_names.append(
                 os.path.join(pos_root, name)
+            )
+        for i, name in enumerate(pos_names2):
+            if not name.endswith('.jpg'):
+                continue
+            pos_img_names.append(
+                os.path.join(pos_root2, name)
             )
         self.labels = [0] * len(neg_img_names) + [1] * len(pos_img_names)
         self.img_names = neg_img_names + pos_img_names

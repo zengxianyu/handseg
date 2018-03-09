@@ -22,7 +22,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--i', default='vgg')  # 'vgg' or 'resnet' or 'densenet'
-parser.add_argument('--train_dir', default='/home/zeng/data/datasets/clshand')  # training dataset
+parser.add_argument('--train_dir', default='/home/zeng/data/datasets/oxhand/train')  # training dataset
 parser.add_argument('--check_dir', default='./parameters_cls')  # save checkpoint parameters
 parser.add_argument('--r', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
 parser.add_argument('--b', type=int, default=8)  # batch size
@@ -37,7 +37,7 @@ check_dir = opt.check_dir
 bsize = opt.b
 iter_num = opt.e
 
-label_weight = [5.11, 3.98]
+label_weight = [9.81, 3.98]
 std = [.229, .224, .225]
 mean = [.485, .456, .406]
 
