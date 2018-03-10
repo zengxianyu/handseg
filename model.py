@@ -35,6 +35,18 @@ class Deconv(nn.Module):
             if isinstance(m, nn.Conv2d):
                 m.weight.data.normal_(0, 0.01)
 
+    def load_state_dict(self, sd):
+        sb = sd.items()
+        if 'main.1.weight' == sb[0][0]:
+            self.main[0].weight.data = sb[0][1]
+            self.main[0].bias.data = sb[1][1]
+            self.main[3].weight.data = sb[2][1]
+            self.main[3].bias.data = sb[3][1]
+            self.main[6].weight.data = sb[4][1]
+            self.main[6].bias.data = sb[5][1]
+        else:
+            super(Deconv, self).load_state_dict(sd)
+
     def forward(self, x):
         x = F.avg_pool2d(x, kernel_size=3, stride=1, padding=1, ceil_mode=True)
         x = self.reduce_channel(x)
