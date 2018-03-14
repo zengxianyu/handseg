@@ -26,7 +26,7 @@ parser.add_argument('--train_dir', default='%s/data/datasets/oxhand/train'%home)
 parser.add_argument('--check_dir', default='./parameters')  # save checkpoint parameters
 parser.add_argument('--f', default=None)
 parser.add_argument('--r', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
-parser.add_argument('--b', type=int, default=8)  # batch size
+parser.add_argument('--b', type=int, default=48)  # batch size
 parser.add_argument('--e', type=int, default=20)  # epoches
 # parser.add_argument('--lw', type=int, default=7)  # epoches
 opt = parser.parse_args()

@@ -13,19 +13,20 @@ from tensorboardX import SummaryWriter
 from datetime import datetime
 import os
 import glob
+import numpy as np
 import pdb
-from myfunc import make_image_grid, crf_func
+from myfunc import make_image_grid, crf_func, avg_func
 import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--i', default='vgg')  # 'vgg' or 'resnet' or 'densenet'
 parser.add_argument('--q', default='')  # '' or 'pix' or 'box'
-parser.add_argument('--train_dir', default='/home/zeng/data/datasets/oxhand/train')  # training dataset
+parser.add_argument('--train_dir', default='/home/crow/data/datasets/oxhand/train')  # training dataset
 parser.add_argument('--check_dir', default='./parameters_with_cls')  # save checkpoint parameters
 parser.add_argument('--f', default=None)
-parser.add_argument('--r', type=int, default=19)  # latest checkpoint, set to -1 if don't need to load checkpoint
+parser.add_argument('--r', type=int, default=49)  # latest checkpoint, set to -1 if don't need to load checkpoint
 parser.add_argument('--b', type=int, default=8)  # batch size
-parser.add_argument('--e', type=int, default=40)  # epoches
+parser.add_argument('--e', type=int, default=100)  # epoches
 opt = parser.parse_args()
 print(opt)
 
@@ -48,11 +49,11 @@ iter_num = opt.e  # training iterations
 std = [.229, .224, .225]
 mean = [.485, .456, .406]
 
-# os.system('rm -rf ./runs/*')
-# writer = SummaryWriter('./runs/'+datetime.now().strftime('%B%d  %H:%M:%S'))
-#
-# if not os.path.exists('./runs'):
-#     os.mkdir('./runs')
+os.system('rm -rf ./runs/*')
+writer = SummaryWriter('./runs/'+datetime.now().strftime('%B%d  %H:%M:%S'))
+
+if not os.path.exists('./runs'):
+    os.mkdir('./runs')
 
 if not os.path.exists(check_dir):
     os.mkdir(check_dir)
@@ -96,20 +97,29 @@ for it in range(resume_ep+1, iter_num):
         if lbl.max() == 2:
             sb = (lbl[:, 0, 0] == 2).nonzero().view(-1)
             pseudo_inputs = Variable(data[sb, :, :, :]).cuda()
-            feats = feature(pseudo_inputs)
-            pseudo_lbl = deconv(feats)
-            pseudo_lbl = functional.upsample(pseudo_lbl, scale_factor=8)
-            pseudo_lbl = functional.softmax(pseudo_lbl).data.cpu().numpy()
+            ## CRF
+            # feats = feature(pseudo_inputs)
+            # pseudo_lbl = deconv(feats)
+            # pseudo_lbl = functional.upsample(pseudo_lbl, scale_factor=8)
+            # pseudo_lbl = functional.softmax(pseudo_lbl).data.cpu().numpy()
+            # imgs = data[sb, :, :, :].numpy()
+            #
+            # pseudo_lbl = crf_func(imgs.transpose(0, 2, 3, 1), pseudo_lbl)
+            # pseudo_lbl = torch.from_numpy(pseudo_lbl[:, 1])
+            #
+            # pseudo_lbl[pseudo_lbl>0.2] = 1
+            # pseudo_lbl[pseudo_lbl<=0.2] = 0
+            # lbl[sb, :, :] = pseudo_lbl.long()
+            ## Avg
+            pseudo_lbl = avg_func(feature, deconv, pseudo_inputs, 8)
+            pseudo_lbl = pseudo_lbl.cpu().numpy()
             imgs = data[sb, :, :, :].numpy()
-
-            pseudo_lbl = crf_func(imgs.transpose(0, 2, 3, 1), pseudo_lbl)
+            pseudo_lbl = crf_func(imgs.transpose(0, 2, 3, 1), np.stack((1 - pseudo_lbl, pseudo_lbl), 1))
             pseudo_lbl = torch.from_numpy(pseudo_lbl[:, 1])
 
-            pseudo_lbl[pseudo_lbl>0.2] = 1
-            pseudo_lbl[pseudo_lbl<=0.2] = 0
+            pseudo_lbl[pseudo_lbl>=0.5] = 1
+            pseudo_lbl[pseudo_lbl<0.5] = 0
             lbl[sb, :, :] = pseudo_lbl.long()
-        del feats
-        gc.collect()
 
         lbl = Variable(lbl).cuda()
         inputs = Variable(data).cuda()
@@ -129,18 +139,18 @@ for it in range(resume_ep+1, iter_num):
         optimizer_feature.step()
         optimizer_deconv.step()
 
-        # if ib % 1 ==0:
-        #     # visulize
-        #     image = make_image_grid(inputs.data[:4, :3], mean, std)
-        #     writer.add_image('Image', torchvision.utils.make_grid(image), ib)
-        #     msk = functional.softmax(msk)
-        #     mask1 = msk.data[:4, 1:2]
-        #     mask1 = mask1.repeat(1, 3, 1, 1)
-        #     writer.add_image('Image2', torchvision.utils.make_grid(mask1), ib)
-        #     mask1 = lbl.data[:4].unsqueeze(1).float()
-        #     mask1 = mask1.repeat(1, 3, 1, 1)
-        #     writer.add_image('Label', torchvision.utils.make_grid(mask1), ib)
-        #     writer.add_scalar('M_global', loss.data[0], ib)
+        if ib % 20 ==0:
+            # visulize
+            image = make_image_grid(inputs.data[:4, :3], mean, std)
+            writer.add_image('Image', torchvision.utils.make_grid(image), ib)
+            msk = functional.softmax(msk)
+            mask1 = msk.data[:4, 1:2]
+            mask1 = mask1.repeat(1, 3, 1, 1)
+            writer.add_image('Image2', torchvision.utils.make_grid(mask1), ib)
+            mask1 = lbl.data[:4].unsqueeze(1).float()
+            mask1 = mask1.repeat(1, 3, 1, 1)
+            writer.add_image('Label', torchvision.utils.make_grid(mask1), ib)
+            writer.add_scalar('M_global', loss.data[0], ib)
         print('loss: %.4f (epoch: %d, step: %d)' % (loss.data[0], it, ib))
         del inputs, msk, lbl, loss, feats
         gc.collect()

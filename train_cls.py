@@ -19,13 +19,15 @@ import pdb
 from myfunc import make_image_grid
 import torchvision.datasets as datasets
 import argparse
+from os.path import expanduser
+home = expanduser("~")
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--i', default='vgg')  # 'vgg' or 'resnet' or 'densenet'
-parser.add_argument('--train_dir', default='/home/zeng/data/datasets/oxhand/train')  # training dataset
+parser.add_argument('--train_dir', default='%s/data/datasets/oxhand/train'%home)  # training dataset
 parser.add_argument('--check_dir', default='./parameters_cls')  # save checkpoint parameters
 parser.add_argument('--r', type=int, default=-1)  # latest checkpoint, set to -1 if don't need to load checkpoint
-parser.add_argument('--b', type=int, default=8)  # batch size
+parser.add_argument('--b', type=int, default=38)  # batch size
 parser.add_argument('--e', type=int, default=20)  # training epoches
 opt = parser.parse_args()
 print(opt)

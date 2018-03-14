@@ -15,7 +15,7 @@ from tensorboard import SummaryWriter
 from datetime import datetime
 import os
 import pdb
-from myfunc import make_image_grid
+from myfunc import make_image_grid, avg_func, crf_func
 import numpy as np
 import argparse
 
@@ -23,9 +23,9 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--i', default='vgg')  # dataset
 parser.add_argument('--test_dir', default='/home/zeng/data/datasets/oxhand/val')  # dataset
-parser.add_argument('--output_dir', default='/home/zeng/data/datasets/oxhand/val/seg_alt')
-parser.add_argument('--feat', default='/home/zeng/handseg/parameters_alt/feature-epoch-19-step-869.pth')
-parser.add_argument('--deconv', default='/home/zeng/handseg/parameters_alt/deconv-epoch-19-step-869.pth')
+parser.add_argument('--output_dir', default='/home/zeng/data/datasets/oxhand/val/seg_with_cls')
+parser.add_argument('--feat', default='/home/zeng/handseg/parameters_with_cls/feature-epoch-70-step-370.pth')
+parser.add_argument('--deconv', default='/home/zeng/handseg/parameters_with_cls/deconv-epoch-70-step-370.pth')
 opt = parser.parse_args()
 print(opt)
 
@@ -37,7 +37,6 @@ deconv_param_file = opt.deconv
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
 
-# models
 # models
 if 'vgg' == opt.i:
     feature = Vgg16()
@@ -70,8 +69,13 @@ for ib, (data, img_name, img_size) in enumerate(loader):
     msk = functional.softmax(msk)
 
     msk = msk.data[0, 1].cpu().numpy()
-    msk = (msk*255).astype(np.uint8)
 
+    # msk = avg_func(feature, deconv, inputs, 8)
+    # msk = msk.cpu().numpy()
+    # msk = crf_func(data.cpu().numpy().transpose(0, 2, 3, 1), np.stack((1-msk, msk), 1))
+    # msk = msk[0, 1]
+
+    msk = (msk*255).astype(np.uint8)
     msk = Image.fromarray(msk)
 
     msk = msk.resize((img_size[0][0], img_size[1][0]))
