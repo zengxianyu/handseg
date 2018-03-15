@@ -22,10 +22,10 @@ import argparse
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--i', default='vgg')  # dataset
-parser.add_argument('--test_dir', default='/home/zeng/data/datasets/oxhand/val')  # dataset
-parser.add_argument('--output_dir', default='/home/zeng/data/datasets/oxhand/val/seg_with_cls')
-parser.add_argument('--feat', default='/home/zeng/handseg/parameters_with_cls/feature-epoch-70-step-370.pth')
-parser.add_argument('--deconv', default='/home/zeng/handseg/parameters_with_cls/deconv-epoch-70-step-370.pth')
+parser.add_argument('--test_dir', default='/home/zeng/data/datasets/oxhand/test')  # dataset
+parser.add_argument('--output_dir', default='/home/zeng/data/datasets/oxhand/test/seg_alt_msk')
+parser.add_argument('--feat', default='/home/zeng/handseg/parameters_alt_msk/feature-epoch-19-step-356.pth')
+parser.add_argument('--deconv', default='/home/zeng/handseg/parameters_alt_msk/deconv-epoch-19-step-356.pth')
 opt = parser.parse_args()
 print(opt)
 
